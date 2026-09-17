@@ -4,6 +4,23 @@ import threading
 import asyncio
 import discord
 
+
+# --- حماية الموقع بكلمة مرور (حطها هنا) ---
+def check_auth(username, password):
+    return username == 'Lastal3azmi' and password == 'StayHereAl7en'
+
+def authenticate():
+    return Response(
+        'Access denied. Please login.', 401,
+        {'WWW-Authenticate': 'Basic realm="Login Required"'}
+    )
+
+@app.before_request
+def requires_auth():
+    auth = request.authorization
+    if not auth or not check_auth(auth.username, auth.password):
+        return authenticate()
+# ----------------------------------------
 app = Flask(__name__)
 
 # ==========================================
