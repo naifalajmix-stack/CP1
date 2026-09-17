@@ -3,6 +3,7 @@ from google import genai
 import threading
 import asyncio
 import discord
+import os
 
 app = Flask(__name__)
 
@@ -26,8 +27,6 @@ def requires_auth():
 
 # ==========================================
 # 🛑 توكن بوتك وآيدي سيرفرك:
-import os
-
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = 886379063487373352
 # ==========================================
@@ -89,25 +88,37 @@ def get_discord_members():
 
 @app.route('/discord_admin_action', methods=['POST'])
 def discord_admin_action():
-    data = request.get_json()
-    action = data.get('action')
-    user_id = int(data.get('user_id'))
-
-    guild = discord_client.get_guild(GUILD_ID)
-    if not guild:
-        return jsonify({"message": "السيرفر غير متصل."})
-
-    member = guild.get_member(user_id)
-    if not member:
-        return jsonify({"message": "العضو غير موجود في السيرفر حالياً."})
-
-    future = asyncio.run_coroutine_threadsafe(perform_action(member, action, data), discord_client.loop)
     try:
-        result_msg = future.result(timeout=5)
-    except Exception as e:
-        result_msg = f"فشل التنفيذ: {str(e)}"
+        data = request.get_json()
+        if not data:
+            return jsonify({"message": "فشل التنفيذ: البيانات المرسلة فارغة."}), 400
+            
+        action = data.get('action')
+        user_id_raw = data.get('user_id')
+        
+        if not user_id_raw:
+            return jsonify({"message": "فشل التنفيذ: آيدي العضو غير موجود."}), 400
+            
+        user_id = int(user_id_raw)
 
-    return jsonify({"message": result_msg})
+        guild = discord_client.get_guild(GUILD_ID)
+        if not guild:
+            return jsonify({"message": "فشل التنفيذ: السيرفر غير متصل."})
+
+        member = guild.get_member(user_id)
+        if not member:
+            return jsonify({"message": "فشل التنفيذ: العضو غير موجود في السيرفر حالياً (قد يكون خرج)."})
+
+        future = asyncio.run_coroutine_threadsafe(perform_action(member, action, data), discord_client.loop)
+        try:
+            result_msg = future.result(timeout=10)
+        except Exception as e:
+            result_msg = f"فشل التنفيذ (مهلة الانتظار أو خطأ خيطي): {str(e)}"
+
+        return jsonify({"message": result_msg})
+        
+    except Exception as e:
+        return jsonify({"message": f"خطأ برمجي في السيرفر: {str(e)}"}), 500
 
 async def perform_action(member, action, data):
     try:
