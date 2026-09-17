@@ -4,6 +4,7 @@ import threading
 import asyncio
 import discord
 
+app = Flask(__name__)
 
 # --- حماية الموقع بكلمة مرور (حطها هنا) ---
 def check_auth(username, password):
@@ -21,7 +22,7 @@ def requires_auth():
     if not auth or not check_auth(auth.username, auth.password):
         return authenticate()
 # ----------------------------------------
-app = Flask(__name__)
+
 
 # ==========================================
 # 🛑 توكن بوتك وآيدي سيرفرك:
