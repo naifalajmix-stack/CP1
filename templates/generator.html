@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مولد الأكواد البرمجية</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #313338;
+            color: #dbdee1;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: #2b2d31;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        h2 {
+            color: #ffffff;
+            margin-top: 0;
+            text-align: center;
+            border-bottom: 1px solid #3f4147;
+            padding-bottom: 15px;
+        }
+        label {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #b9bbbe;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 12px;
+            background-color: #383a40;
+            border: 1px solid #1e1f22;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 15px;
+            resize: none;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #5865F2;
+        }
+        button {
+            background-color: #5865F2;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background 0.2s;
+            margin-bottom: 15px;
+        }
+        button:hover { background-color: #4752C4; }
+        .output-box {
+            background-color: #1e1f22;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 120px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            color: #a6e22e;
+            border: 1px solid #3f4147;
+            white-space: pre-wrap;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #00aff4;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>⚡ Code Generator </h2>
+    
+    <label for="promptInput">اكتب وصف الكود أو الفكرة التي تريد برمجتها:</label>
+    <textarea id="promptInput" placeholder="مثال: اكتب كود بايثون للتحقق من عمر المستخدم..."></textarea>
+    
+    <button onclick="generateCode()">Generate 🚀</button>
+
+    <label>الكود الناتج:</label>
+    <div class="output-box" id="outputBox">سيظهر الكود الناتج هنا...</div>
+
+    <a href="/" class="back-link">العودة للرئيسية</a>
+</div>
+
+<script>
+    function generateCode() {
+        const promptText = document.getElementById('promptInput').value.trim();
+        const outputBox = document.getElementById('outputBox');
+        if (!promptText) return;
+
+        outputBox.innerText = "جاري توليد الكود عبر الذكاء الاصطناعي...";
+
+        // إرسال الطلب بنفس مفتاح الرسالة المتفق عليه في app.py
+        fetch('/get_ai_response', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: "اكتب لي كود برمجي فقط بناءً على الوصف التالي: " + promptText })
+        })
+        .then(res => res.json())
+        .then(data => {
+            outputBox.innerText = data.reply;
+        })
+        .catch(err => {
+            outputBox.innerText = "حدث خطأ أثناء الاتصال بالخادم.";
+        });
+    }
+</script>
+
+</body>
+</html>

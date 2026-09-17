@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Members Control Panel</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        h1 {
+            text-align: center;
+            color: #5865F2;
+            margin-bottom: 25px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 15px;
+            background-color: #2c2f33;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button.refresh-btn {
+            background-color: #5865F2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button.refresh-btn:hover { background-color: #4752C4; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: right;
+            border-bottom: 1px solid #2c2f33;
+        }
+        th {
+            background-color: #292b2f;
+            color: #b9bbbe;
+        }
+        tr:hover { background-color: #25272a; }
+        .action-btns {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .action-btns button, .action-btns select {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 13px;
+        }
+      .btn-ban { background-color: #ed4245; }
+.btn-kick { background-color: #ed4245; }
+.btn-disc { background-color: #ed4245; color: #fff !important; }
+        .role-select { background-color: #2f3136; border: 1px solid #7289da; color: #fff; }
+        .status-msg { margin-top: 15px; text-align: center; font-weight: bold; }
+        .back-link { display: block; text-align: center; margin-top: 25px; color: #00aff4; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1> Discord Members Control Panel</h1>
+    
+    <div class="controls">
+        <input type="text" id="searchInput" placeholder="ابحث عن اسم عضو..." onkeyup="filterMembers()">
+        <button class="refresh-btn" onclick="loadMembers()">Refresh 🔄</button>
+    </div>
+
+    <div id="statusMessage" class="status-msg" style="color: #faa61a;">جاري تحميل الأعضاء...</div>
+
+    <table id="membersTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>اسم العضو</th>
+                <th>آيدي العضو</th>
+                <th>الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="membersList"></tbody>
+    </table>
+
+    <a href="/" class="back-link">العودة للرئيسية</a>
+</div>
+
+<script>
+    let allMembers = [];
+    let allRoles = [];
+
+    function loadMembers() {
+        const statusMsg = document.getElementById('statusMessage');
+        statusMsg.style.color = '#faa61a';
+        statusMsg.innerText = "جاري رصد الأعضاء والرتب من الديسكورد...";
+
+        fetch('/get_discord_members')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    allMembers = data.members;
+                    allRoles = data.roles;
+                    displayMembers(allMembers);
+                    statusMsg.innerText = `تم رصد ${allMembers.length} عضو بنجاح.`;
+                    statusMsg.style.color = '#3ba55d';
+                    document.getElementById('membersTable').style.display = 'table';
+                } else {
+                    statusMsg.style.color = '#ed4245';
+                    statusMsg.innerText = data.message;
+                }
+            })
+            .catch(err => {
+                statusMsg.style.color = '#ed4245';
+                statusMsg.innerText = "حدث خطأ أثناء الاتصال بالسيرفر.";
+            });
+    }
+
+    function displayMembers(members) {
+        const tbody = document.getElementById('membersList');
+        tbody.innerHTML = '';
+
+        if (members.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #888;">لايوجد أعضاء مطابقين للبحث</td></tr>`;
+            return;
+        }
+
+        members.forEach(m => {
+            let roleOptions = `<option value="" disabled selected>إعطاء رتبه 📌</option>`;
+            allRoles.forEach(r => {
+                roleOptions += `<option value="${r.id}">${r.name}</option>`;
+            });
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${m.name}</b></td>
+                <td style="color: #b9bbbe; font-family: monospace;">${m.id}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn-ban" onclick="takeAction('${m.id}', 'ban', '${m.name}')">BAN</button>
+                        <button class="btn-kick" onclick="takeAction('${m.id}', 'kick', '${m.name}')">KICK</button>
+                        <button class="btn-disc" onclick="takeAction('${m.id}', 'disconnect', '${m.name}')">Disconnect</button>
+                        <select class="role-select" onchange="assignRole('${m.id}', this, '${m.name}')">
+                            ${roleOptions}
+                        </select>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function filterMembers() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allMembers.filter(m => m.name.toLowerCase().includes(query));
+        displayMembers(filtered);
+    }
+
+    function takeAction(userId, action, userName) {
+        const actionNames = { 'ban': 'تبنيد (BAN)', 'kick': 'طرد (KICK)', 'disconnect': 'فصل من الصوت (Disconnect)' };
+        if (!confirm(`هل أنت متأكد من تنفيذ (${actionNames[action]}) على العضو ${userName}؟`)) return;
+
+        sendActionRequest({ user_id: userId, action: action });
+    }
+
+    function assignRole(userId, selectElement, userName) {
+        const roleId = selectElement.value;
+        const roleName = selectElement.options[selectElement.selectedIndex].text;
+        
+        if (!confirm(`هل أنت متأكد من إعطاء رتبة (${roleName}) للعضو ${userName}؟`)) {
+            selectElement.selectedIndex = 0;
+            return;
+        }
+
+        sendActionRequest({ user_id: userId, action: 'add_role', role_id: roleId });
+    }
+
+    function sendActionRequest(payload) {
+        fetch('/discord_admin_action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            loadMembers();
+        })
+        .catch(err => {
+            alert("حدث خطأ أثناء تنفيذ الإجراء.");
+        });
+    }
+
+    window.onload = loadMembers;
+</script>
+
+</body>
+</html>
