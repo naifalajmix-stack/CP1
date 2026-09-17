@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 from google import genai
 import threading
 import asyncio
@@ -6,7 +6,7 @@ import discord
 
 app = Flask(__name__)
 
-# --- حماية الموقع بكلمة مرور (حطها هنا) ---
+# --- حماية الموقع بكلمة مرور ---
 def check_auth(username, password):
     return username == 'Lastal3azmi' and password == 'StayHereAl7en'
 
@@ -142,16 +142,17 @@ def chat_page():
 @app.route('/generator')
 def generator_page():
     return render_template('generator.html')
+
 @app.route('/get_ai_response', methods=['POST'])
 def get_ai_response():
     data = request.get_json()
     user_message = data.get('message', '')
     try:
-        response = client.models.generate_content(model='gemini-3.6-flash', contents=user_message)
+        response = client.models.generate_content(model='gemini-2.5-flash', contents=user_message)
         ai_reply = response.text
     except Exception as e:
         ai_reply = f"Error: {str(e)}"
     return jsonify({"reply": ai_reply})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
