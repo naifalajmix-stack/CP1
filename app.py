@@ -26,7 +26,7 @@ def requires_auth():
 
 # ==========================================
 # 🛑 توكن بوتك وآيدي سيرفرك:
-DISCORD_TOKEN = "MTUzNTMyNDYwOTE3MDM4MzAzMA.G_GReW.CBdQAVQ2mnXqxIq2pGzCMLhgScv9RGrUXeLf-Y"
+DISCORD_TOKEN = ""
 GUILD_ID = 886379063487373352
 # ==========================================
 
