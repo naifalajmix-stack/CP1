@@ -26,7 +26,9 @@ def requires_auth():
 
 # ==========================================
 # 🛑 توكن بوتك وآيدي سيرفرك:
-DISCORD_TOKEN = ""
+import os
+
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD_ID = 886379063487373352
 # ==========================================
 
